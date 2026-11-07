@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import altair as alt
 import joblib
 import numpy as np
 import pandas as pd
@@ -7,6 +8,14 @@ import streamlit as st
 
 from tetouan.data import TARGET, features, read
 from tetouan.inference import predict
+
+
+def explain(reading, finding, decision):
+    """Explain a chart using its axes, observed result and practical use."""
+    st.markdown("**Cómo leerla:** " + reading)
+    st.info("Lo que muestran estos datos: " + finding)
+    st.caption("Para qué sirve: " + decision)
+
 
 st.set_page_config(page_title="Tetouan | Demanda eléctrica", layout="wide")
 ROOT = Path(__file__).resolve().parent
@@ -35,9 +44,9 @@ summary, patterns, climate, forecast, evaluation, interpretation = st.tabs(
         "1 · Conoce los datos",
         "2 · Descubre patrones",
         "3 · Explora el clima",
-        "Predicción guiada",
-        "Evaluación",
-        "Interpretación",
+        "4 · Predicción guiada",
+        "5 · Comprueba el modelo",
+        "6 · Entiende sus señales",
     ]
 )
 with summary:
@@ -46,6 +55,14 @@ with summary:
     b.metric("Variables predictoras", len(features(frame).columns))
     c.metric("Valores faltantes", int(frame.isna().sum().sum()))
     st.write("Periodo", str(frame.index.min()), "a", str(frame.index.max()))
+    st.subheader("¿Qué representa cada fila?")
+    st.write(
+        "Una medición cada 10 minutos: cinco variables meteorológicas y el consumo eléctrico de tres zonas. Las 59 variables del modelo se calculan a partir de este historial; no son 59 sensores distintos."
+    )
+    with st.expander("Diccionario de estadísticas"):
+        st.write(
+            "count: número de mediciones · mean: promedio · std: variabilidad · min y max: extremos · 25%, 50% y 75%: cuartiles. El 50% es la mediana, el punto que divide los datos en dos mitades."
+        )
     st.dataframe(frame.describe().T, width="stretch")
     st.caption(
         "Datos sin imputación: la carga rechaza faltantes, duplicados temporales y saltos de frecuencia."
@@ -60,26 +77,101 @@ with patterns:
         ["D", "h", "W"],
         format_func=lambda x: {"D": "Diaria", "h": "Horaria", "W": "Semanal"}[x],
     )
-    st.line_chart(frame[zone].resample(frequency).mean())
+    st.subheader("Cómo cambia el consumo con el tiempo")
+    daily = frame[zone].resample(frequency).mean()
+    st.line_chart(
+        daily.rename("Consumo promedio"), x_label="Fecha", y_label="Demanda media"
+    )
+    explain(
+        "El eje horizontal es la fecha; el vertical es el consumo promedio del intervalo elegido. Una subida significa mayor demanda, no mayor error del modelo.",
+        f"El promedio más alto de la agregación elegida es {daily.max():,.0f}, en {daily.idxmax():%d/%m/%Y %H:%M}; el más bajo es {daily.min():,.0f}.",
+        "Identificar periodos de mayor demanda y cambios de nivel. Un promedio diario puede ocultar picos de diez minutos.",
+    )
     left, right = st.columns(2)
     left.subheader("Perfil por hora")
-    left.line_chart(frame.groupby(frame.index.hour)[zone].mean())
-    right.subheader("Perfil por día de semana (0=lunes)")
-    right.bar_chart(frame.groupby(frame.index.day_of_week)[zone].mean())
+    hourly = frame.groupby(frame.index.hour)[zone].mean()
+    left.line_chart(
+        hourly.rename("Promedio por hora"),
+        x_label="Hora del día",
+        y_label="Demanda media",
+    )
+    left.caption(
+        f"Cada punto reúne todos los días del archivo a esa hora. El máximo promedio ocurre a las {hourly.idxmax():02d}:00. No representa un día específico."
+    )
+    right.subheader("¿Qué días consumen más?")
+    weekdays = [
+        "Lunes",
+        "Martes",
+        "Miércoles",
+        "Jueves",
+        "Viernes",
+        "Sábado",
+        "Domingo",
+    ]
+    weekly = frame.groupby(frame.index.day_of_week)[zone].mean()
+    weekly.index = [weekdays[i] for i in weekly.index]
+    right.bar_chart(weekly.rename("Demanda media"), sort=False)
+    right.caption(
+        f"La barra más alta corresponde a {weekly.idxmax()}. Son promedios: no todos los días de esa categoría consumen lo mismo."
+    )
+    st.subheader("Mapa de una semana típica")
+    grid = (
+        frame.assign(Hora=frame.index.hour, Día=frame.index.day_of_week)
+        .groupby(["Día", "Hora"])[zone]
+        .mean()
+        .reset_index(name="Demanda")
+    )
+    grid["Día"] = grid["Día"].map(dict(enumerate(weekdays)))
+    heatmap = (
+        alt.Chart(grid)
+        .mark_rect()
+        .encode(
+            x=alt.X("Hora:O", title="Hora del día"),
+            y=alt.Y("Día:O", sort=weekdays),
+            color=alt.Color("Demanda:Q", scale=alt.Scale(scheme="yelloworangered")),
+            tooltip=["Día", "Hora", alt.Tooltip("Demanda:Q", format=",.0f")],
+        )
+    )
+    st.altair_chart(heatmap.properties(height=260), width="stretch")
+    explain(
+        "Cada casilla cruza una hora y un día de semana. Los tonos más intensos indican mayor consumo promedio.",
+        "El mapa resume el patrón semanal del archivo completo; al cambiar de zona también cambia el mapa.",
+        "Localizar franjas de mayor demanda para planificar recursos. Es exploración descriptiva, no un pronóstico.",
+    )
 with climate:
     variable = st.selectbox("Variable meteorológica", list(frame.columns[:5]))
     st.scatter_chart(frame.iloc[::20], x=variable, y=TARGET)
     st.caption(
         "Muestra sistemática de una de cada 20 observaciones. Asociación no implica causalidad."
     )
+    correlation = frame[variable].corr(frame[TARGET])
+    explain(
+        "Cada punto es una observación: clima en horizontal y consumo de Zona 1 en vertical. Una nube ancha indica que el clima por sí solo no explica todo.",
+        f"La correlación lineal de {variable} con Zona 1 en el archivo completo es {correlation:.2f}. La gráfica muestra una de cada 20 filas.",
+        "Buscar relaciones y posibles interacciones. La estación, la hora y otros factores pueden explicar parte de la asociación.",
+    )
     st.subheader("Correlaciones entre variables observadas")
     st.dataframe(frame.corr().style.background_gradient(cmap="RdBu", vmin=-1, vmax=1))
-    st.subheader("Distribución")
+    st.caption(
+        "Cada celda compara dos variables: +1 indica que aumentan juntas; −1, que se mueven en sentido contrario; 0 indica poca relación lineal. La diagonal es siempre 1. Una correlación alta entre predictores puede indicar información redundante."
+    )
+    st.subheader("¿Qué valores del clima son habituales?")
     counts, edges = np.histogram(frame[variable], bins=30)
-    st.bar_chart(pd.Series(counts, index=np.round((edges[1:] + edges[:-1]) / 2, 3)))
+    st.bar_chart(
+        pd.Series(
+            counts,
+            index=np.round((edges[1:] + edges[:-1]) / 2, 3),
+            name="Número de observaciones",
+        ),
+        x_label=variable,
+        y_label="Frecuencia",
+    )
+    explain(
+        "Las barras agrupan valores parecidos de la variable; su altura indica cuántas mediciones caen en cada intervalo.",
+        f"La mediana es {frame[variable].median():.2f}; el 50% central está entre {frame[variable].quantile(0.25):.2f} y {frame[variable].quantile(0.75):.2f}.",
+        "Reconocer valores frecuentes, asimetrías y extremos. Una barra poco frecuente no demuestra que exista un error de medición.",
+    )
 with forecast:
-    import altair as alt
-
     st.subheader("Una predicción, paso a paso")
     st.markdown(
         "**1. Elige el momento de partida.** El modelo usa el consumo y el clima registrados hasta ese instante. **2. Mira la estimación.** Calcula la demanda de Zona 1 exactamente una hora después. **3. Comprueba el resultado.** Si esa hora existe en el archivo, puedes compararla con lo que ocurrió."
@@ -233,14 +325,62 @@ with evaluation:
             table = pd.read_csv(report)
             st.subheader(title)
             st.dataframe(table, width="stretch")
-            st.bar_chart(table.set_index("model")["rmse"])
+            ranked = table.sort_values("rmse")
+            st.bar_chart(
+                ranked.set_index("model")["rmse"],
+                sort=False,
+                y_label="RMSE · menor es mejor",
+            )
+            explain(
+                "Cada barra es un modelo. Una barra más baja indica menos error, con mayor penalización para los fallos grandes.",
+                f"El menor RMSE de esta tabla corresponde a {ranked.iloc[0]['model']}: {ranked.iloc[0]['rmse']:,.2f}.",
+                "La validación elige el modelo; el test examina el resultado final. Que otro modelo gane en test no justifica cambiar la selección después de verlo.",
+            )
     report = ROOT / "artifacts/predictions.csv"
     if report.exists():
         errors = pd.read_csv(report, index_col=0, parse_dates=True)
-        st.line_chart(errors[["observed", "predicted"]].iloc[:1008])
+        st.subheader("Predicción frente a lo que ocurrió")
+        display_errors = (
+            errors[["observed", "predicted"]]
+            .iloc[:1008]
+            .rename(
+                columns={
+                    "observed": "Real a +60 min",
+                    "predicted": "Predicción a +60 min",
+                }
+            )
+        )
+        st.line_chart(
+            display_errors, x_label="Instante de partida", y_label="Demanda a +60 min"
+        )
+        explain(
+            "Las dos líneas corresponden al mismo instante futuro. Cuanto más se separan, mayor es el error. La fecha del eje es el momento desde el que se emitió el pronóstico.",
+            "Se muestran las primeras 1.008 predicciones de test para facilitar la lectura; las métricas usan todo el test.",
+            "Revisar si el modelo sigue los picos y las caídas o responde con retraso.",
+        )
         errors["absolute_error"] = errors.error.abs()
         st.subheader("MAE por hora")
         st.bar_chart(errors.groupby(errors.index.hour).absolute_error.mean())
+        hourly_error = errors.groupby(errors.index.hour).absolute_error.mean()
+        st.caption(
+            f"La franja con mayor error medio es la de las {hourly_error.idxmax():02d}:00, con {hourly_error.max():,.0f} unidades. Estas horas corresponden al momento de emitir la predicción."
+        )
+        st.subheader("¿El modelo suele pasarse o quedarse corto?")
+        residual_counts, residual_edges = np.histogram(errors.error, bins=35)
+        st.bar_chart(
+            pd.Series(
+                residual_counts,
+                index=np.round((residual_edges[1:] + residual_edges[:-1]) / 2),
+                name="Predicciones",
+            ),
+            x_label="Predicción menos valor real",
+            y_label="Frecuencia",
+        )
+        explain(
+            "Cero es un acierto exacto. A la derecha de cero el modelo sobreestima; a la izquierda subestima. Las colas largas representan fallos grandes.",
+            f"El error con signo promedio es {errors.error.mean():,.1f}; el error absoluto promedio es {errors.absolute_error.mean():,.1f}.",
+            "Detectar sesgo y errores extremos. Un promedio con signo cerca de cero puede ocultar errores positivos y negativos que se cancelan.",
+        )
         st.subheader("20 errores más grandes")
         st.dataframe(errors.nlargest(20, "absolute_error"))
 with interpretation:
@@ -252,7 +392,20 @@ with interpretation:
     if report.exists():
         importance = pd.read_csv(report, index_col=0)
         importance.columns = ["Aumento de RMSE al permutar"]
-        st.bar_chart(importance.tail(20))
+        st.bar_chart(importance.tail(20), y_label="Aumento del RMSE")
+        explain(
+            "La barra mide el daño al desordenar esa señal en validación. Más alta significa mayor dependencia del modelo. Un valor negativo puede reflejar ruido o variabilidad del cálculo.",
+            f"La señal con mayor importancia en este experimento es {importance.index[-1]}.",
+            "Priorizar la calidad de los datos más útiles. Esto describe el modelo global, no la causa de una predicción particular.",
+        )
+        with st.expander("Traducción de nombres de variables"):
+            st.markdown("""- **lag_6**: consumo de hace una hora.
+- **lag_138**: consumo de hace 23 horas, útil para comparar con el mismo momento del día anterior al objetivo.
+- **mean_144**: promedio de las últimas 24 horas.
+- **std / range**: variabilidad y amplitud recientes.
+- **hour_sin / hour_cos**: hora codificada como ciclo.
+- **zone1_share**: participación de Zona 1 en el consumo total.
+- **Temperature / Humidity**: temperatura y humedad observadas.""")
     st.markdown(
         "Las variables incluyen consumo histórico, dinámica diaria, meteorología reciente, relaciones entre zonas y calendario. Las importancias se calculan en validación; variables correlacionadas pueden compartir importancia."
     )
