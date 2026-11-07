@@ -1,0 +1,3 @@
+[submodule "vendor/pytabkit"]
+	path = vendor/pytabkit
+	url = https://github.com/dholzmueller/pytabkit.git

@@ -1,0 +1,18 @@
+{
+  "rows": 52416,
+  "columns": [
+    "DateTime",
+    "Temperature",
+    "Humidity",
+    "Wind Speed",
+    "general diffuse flows",
+    "diffuse flows",
+    "Zone 1 Power Consumption",
+    "Zone 2  Power Consumption",
+    "Zone 3  Power Consumption"
+  ],
+  "sha256": "ca8b2f30cf07dd872cb7f2aa45dac110ee38dbe5fc5910a6ff4bcc530dae3a40",
+  "first": "1/1/2017 0:00",
+  "last": "12/30/2017 23:50",
+  "source": "User supplied; official download comparison pending"
+}
