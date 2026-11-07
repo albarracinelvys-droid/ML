@@ -74,6 +74,39 @@ def features(frame):
     ]:
         x[name + "_sin"] = np.sin(2 * np.pi * values / period)
         x[name + "_cos"] = np.cos(2 * np.pi * values / period)
+    x["weekend"] = (frame.index.day_of_week >= 5).astype(int)
+    x["month"] = frame.index.month
+    for lag in [18, 36, 72]:
+        x[f"lag_{lag}"] = frame[TARGET].shift(lag)
+    for window in [6, 36, 144]:
+        rolling = frame[TARGET].rolling(window)
+        x[f"min_{window}"] = rolling.min()
+        x[f"max_{window}"] = rolling.max()
+        x[f"range_{window}"] = rolling.max() - rolling.min()
+    x["daily_change"] = frame[TARGET].diff(144)
+    x["relative_to_day_mean"] = frame[TARGET] / frame[TARGET].rolling(144).mean().clip(
+        lower=1e-6
+    )
+    for col in [
+        "Temperature",
+        "Humidity",
+        "Wind Speed",
+        "general diffuse flows",
+        "diffuse flows",
+    ]:
+        if col in frame:
+            x[col + "_mean_6"] = frame[col].rolling(6).mean()
+            x[col + "_change_6"] = frame[col].diff(6)
+    zones = [c for c in frame if "Power Consumption" in c]
+    if len(zones) == 3:
+        total = frame[zones].sum(axis=1)
+        x["total_power"] = total
+        x["zone1_share"] = frame[TARGET] / total.clip(lower=1e-6)
+        for col in zones[1:]:
+            x[col + "_lag6"] = frame[col].shift(6)
+            x[col + "_mean6"] = frame[col].rolling(6).mean()
+    if "Temperature" in frame and "Humidity" in frame:
+        x["temperature_humidity"] = frame.Temperature * frame.Humidity
     return x.dropna()
 
 

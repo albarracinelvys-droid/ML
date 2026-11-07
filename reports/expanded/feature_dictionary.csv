@@ -1,0 +1,60 @@
+feature,availability
+Temperature,Observed at t or calculated from observations at/before t
+Humidity,Observed at t or calculated from observations at/before t
+Wind Speed,Observed at t or calculated from observations at/before t
+general diffuse flows,Observed at t or calculated from observations at/before t
+diffuse flows,Observed at t or calculated from observations at/before t
+Zone 1 Power Consumption,Observed at t or calculated from observations at/before t
+Zone 2 Power Consumption,Observed at t or calculated from observations at/before t
+Zone 3 Power Consumption,Observed at t or calculated from observations at/before t
+lag_1,Observed at t or calculated from observations at/before t
+lag_6,Observed at t or calculated from observations at/before t
+lag_12,Observed at t or calculated from observations at/before t
+lag_138,Observed at t or calculated from observations at/before t
+lag_144,Observed at t or calculated from observations at/before t
+mean_6,Observed at t or calculated from observations at/before t
+std_6,Observed at t or calculated from observations at/before t
+mean_36,Observed at t or calculated from observations at/before t
+std_36,Observed at t or calculated from observations at/before t
+mean_144,Observed at t or calculated from observations at/before t
+std_144,Observed at t or calculated from observations at/before t
+difference,Observed at t or calculated from observations at/before t
+hour_sin,Observed at t or calculated from observations at/before t
+hour_cos,Observed at t or calculated from observations at/before t
+weekday_sin,Observed at t or calculated from observations at/before t
+weekday_cos,Observed at t or calculated from observations at/before t
+year_sin,Observed at t or calculated from observations at/before t
+year_cos,Observed at t or calculated from observations at/before t
+weekend,Observed at t or calculated from observations at/before t
+month,Observed at t or calculated from observations at/before t
+lag_18,Observed at t or calculated from observations at/before t
+lag_36,Observed at t or calculated from observations at/before t
+lag_72,Observed at t or calculated from observations at/before t
+min_6,Observed at t or calculated from observations at/before t
+max_6,Observed at t or calculated from observations at/before t
+range_6,Observed at t or calculated from observations at/before t
+min_36,Observed at t or calculated from observations at/before t
+max_36,Observed at t or calculated from observations at/before t
+range_36,Observed at t or calculated from observations at/before t
+min_144,Observed at t or calculated from observations at/before t
+max_144,Observed at t or calculated from observations at/before t
+range_144,Observed at t or calculated from observations at/before t
+daily_change,Observed at t or calculated from observations at/before t
+relative_to_day_mean,Observed at t or calculated from observations at/before t
+Temperature_mean_6,Observed at t or calculated from observations at/before t
+Temperature_change_6,Observed at t or calculated from observations at/before t
+Humidity_mean_6,Observed at t or calculated from observations at/before t
+Humidity_change_6,Observed at t or calculated from observations at/before t
+Wind Speed_mean_6,Observed at t or calculated from observations at/before t
+Wind Speed_change_6,Observed at t or calculated from observations at/before t
+general diffuse flows_mean_6,Observed at t or calculated from observations at/before t
+general diffuse flows_change_6,Observed at t or calculated from observations at/before t
+diffuse flows_mean_6,Observed at t or calculated from observations at/before t
+diffuse flows_change_6,Observed at t or calculated from observations at/before t
+total_power,Observed at t or calculated from observations at/before t
+zone1_share,Observed at t or calculated from observations at/before t
+Zone 2 Power Consumption_lag6,Observed at t or calculated from observations at/before t
+Zone 2 Power Consumption_mean6,Observed at t or calculated from observations at/before t
+Zone 3 Power Consumption_lag6,Observed at t or calculated from observations at/before t
+Zone 3 Power Consumption_mean6,Observed at t or calculated from observations at/before t
+temperature_humidity,Observed at t or calculated from observations at/before t

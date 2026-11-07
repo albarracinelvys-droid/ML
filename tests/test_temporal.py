@@ -44,3 +44,22 @@ def test_serialized_inference(tmp_path):
     path = tmp_path / "model.joblib"
     joblib.dump(bundle, path)
     assert np.isfinite(predict(joblib.load(path), sample()))
+
+
+def test_expanded_features_are_causal():
+    a = sample()
+    for col in [
+        "Temperature",
+        "Humidity",
+        "Wind Speed",
+        "general diffuse flows",
+        "diffuse flows",
+        "Zone 2 Power Consumption",
+        "Zone 3 Power Consumption",
+    ]:
+        a[col] = np.arange(len(a), dtype=float) + 1
+    b = a.copy()
+    b.iloc[400:] = 999999
+    pd.testing.assert_frame_equal(features(a).iloc[:256], features(b).iloc[:256])
+    assert len(features(a).columns) == 59
+    assert np.isfinite(features(a).to_numpy()).all()

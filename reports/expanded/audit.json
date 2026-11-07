@@ -1,0 +1,18 @@
+{
+  "rows": 52416,
+  "columns": [
+    "Temperature",
+    "Humidity",
+    "Wind Speed",
+    "general diffuse flows",
+    "diffuse flows",
+    "Zone 1 Power Consumption",
+    "Zone 2 Power Consumption",
+    "Zone 3 Power Consumption"
+  ],
+  "start": "2017-01-01 00:00:00",
+  "end": "2017-12-30 23:50:00",
+  "missing": 0,
+  "sha256": "ca8b2f30cf07dd872cb7f2aa45dac110ee38dbe5fc5910a6ff4bcc530dae3a40",
+  "interval_minutes": 10
+}

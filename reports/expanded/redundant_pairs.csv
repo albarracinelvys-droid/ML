@@ -1,0 +1,33 @@
+,,correlation
+Temperature,Temperature_mean_6,0.997660712238607
+Humidity,Humidity_mean_6,0.9913013332952086
+Wind Speed,Wind Speed_mean_6,0.994724197416826
+general diffuse flows,general diffuse flows_mean_6,0.9806540449288834
+Zone 1 Power Consumption,lag_1,0.9959171894204375
+Zone 1 Power Consumption,lag_144,0.9571150829063584
+Zone 1 Power Consumption,mean_6,0.9824252468214888
+Zone 1 Power Consumption,min_6,0.9709043937050837
+Zone 1 Power Consumption,max_6,0.9809308056311217
+Zone 1 Power Consumption,total_power,0.9617218420298332
+Zone 2 Power Consumption,total_power,0.9628622183480384
+Zone 2 Power Consumption,Zone 2 Power Consumption_mean6,0.986562527024319
+Zone 3 Power Consumption,Zone 3 Power Consumption_mean6,0.987956612065516
+lag_1,lag_144,0.9540857688644365
+lag_1,mean_6,0.9929040528223004
+lag_1,min_6,0.981439613115298
+lag_1,max_6,0.988379716746403
+lag_1,total_power,0.9607729854381353
+lag_6,mean_6,0.9672645816715535
+lag_6,min_6,0.9661814717254699
+lag_6,max_6,0.9568960085369775
+mean_6,min_6,0.9918439685583156
+mean_6,max_6,0.9923301210957508
+mean_6,total_power,0.9529701250694982
+std_6,range_6,0.996133025761449
+mean_36,lag_18,0.9598279911445246
+std_36,range_36,0.9598743054784892
+min_6,max_6,0.9708172549013773
+max_6,total_power,0.9548099020101244
+total_power,Zone 2 Power Consumption_mean6,0.9562683061510063
+Zone 2 Power Consumption_lag6,Zone 2 Power Consumption_mean6,0.9750208475806383
+Zone 3 Power Consumption_lag6,Zone 3 Power Consumption_mean6,0.9775747873420185
